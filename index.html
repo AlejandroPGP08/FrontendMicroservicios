@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Tareas</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cbc;
+            --pending-color: #ff9800;
+            --completed-color: #4caf50;
+            --danger-color: #f44336;
+            --light-color: #f5f5f5;
+            --dark-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .pending .panel-title {
+            color: var(--pending-color);
+        }
+
+        .completed .panel-title {
+            color: var(--completed-color);
+        }
+
+        .counter {
+            background-color: var(--light-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .pending .counter {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: var(--pending-color);
+        }
+
+        .completed .counter {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--completed-color);
+        }
+
+        .task-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--pending-color);
+            transition: all 0.3s ease;
+        }
+
+        .completed .task-item {
+            border-left-color: var(--completed-color);
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .task-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .task-subject {
+            background-color: rgba(74, 111, 165, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: var(--primary-color);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--completed-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            color: white;
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background-color: var(--completed-color);
+        }
+
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-dot.pending {
+            background-color: var(--pending-color);
+        }
+
+        .status-dot.completed {
+            background-color: var(--completed-color);
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Gestión de Tareas</h1>
+            <p class="subtitle">Organiza tus tareas pendientes y completadas</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="panel pending">
+                <div class="panel-header">
+                    <h2 class="panel-title">Tareas Pendientes</h2>
+                    <span class="counter" id="pending-counter">0</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot pending"></div>
+                    <span class="status-text">Microservicio: https://tareas-pendientes-568002848716.us-central1.run.app</span>
+                </div>
+                <div class="task-list" id="pending-tasks">
+                    <!-- Las tareas pendientes se cargarán aquí -->
+                </div>
+            </div>
+
+            <div class="panel completed">
+                <div class="panel-header">
+                    <h2 class="panel-title">Tareas Completadas</h2>
+                    <span class="counter" id="completed-counter">0</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot completed"></div>
+                    <span class="status-text">Microservicio: https://tareas-completadas-568002848716.us-central1.run.app</span>
+                </div>
+                <div class="task-list" id="completed-tasks">
+                    <!-- Las tareas completadas se cargarán aquí -->
+                </div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h2 class="form-title">Agregar Nueva Tarea</h2>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-title">Título de la tarea</label>
+                    <input type="text" id="task-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-subject">Materia</label>
+                    <input type="text" id="task-subject" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-due-date">Fecha de entrega</label>
+                    <input type="date" id="task-due-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-description">Descripción</label>
+                    <textarea id="task-description" required></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="clear-form">Limpiar</button>
+                    <button type="submit" class="btn btn-primary" id="submit-task">Agregar Tarea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // ========== CAMBIAR ESTO ==========
+        // DE ESTO (opción 1 - monolito):
+        const API_BASE = window.env?.API_URL || 'http://localhost:8080';
+        //const API_BASE = "https://frontend-tareas-568002848716.us-central1.run.app";
+        
+        // A ESTO (opción 2 - microservicios):
+        const PENDING_API_BASE = window.env?.PENDING_API_URL || 'http://localhost:8082';
+        const COMPLETED_API_BASE = window.env?.COMPLETED_API_URL || 'http://localhost:8083';
+        //const PENDING_API_BASE = "https://tareas-pendientes-568002848716.us-central1.run.app";
+        //const COMPLETED_API_BASE = "https://tareas-completadas-568002848716.us-central1.run.app";
+        // ==================================
+
+        // Elementos DOM (sin cambios)
+        const pendingTasksContainer = document.getElementById('pending-tasks');
+        const completedTasksContainer = document.getElementById('completed-tasks');
+        const pendingCounter = document.getElementById('pending-counter');
+        const completedCounter = document.getElementById('completed-counter');
+        const taskForm = document.getElementById('task-form');
+        const notification = document.getElementById('notification');
+
+        // Función para mostrar notificaciones (sin cambios)
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Función para formatear fecha (sin cambios)
+        function formatDate(dateString) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                return `${parts[0]}/${parts[1]}/${parts[2]}`;
+            }
+            return dateString;
+        }
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para cargar tareas pendientes
+        async function loadPendingTasks() {
+            try {
+                // DE: const response = await fetch(`${API_BASE}/TareasPendientes`);
+                // A:
+                const response = await fetch(`${PENDING_API_BASE}/TareasPendientes`);
+                if (!response.ok) {
+                    throw new Error('Error al cargar tareas pendientes');
+                }
+                const tasks = await response.json();
+                renderPendingTasks(tasks);
+                pendingCounter.textContent = tasks.length;
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al cargar tareas pendientes', 'error');
+                pendingTasksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div>⚠️</div>
+                        <p>No se pudieron cargar las tareas pendientes</p>
+                        <button class="btn btn-outline" onclick="loadPendingTasks()">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+        // ==================================
+
+        // Función para renderizar tareas pendientes (sin cambios)
+        function renderPendingTasks(tasks) {
+            if (tasks.length === 0) {
+                pendingTasksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div>📝</div>
+                        <p>No hay tareas pendientes</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pendingTasksContainer.innerHTML = tasks.map((task, index) => `
+                <div class="task-item">
+                    <div class="task-header">
+                        <div class="task-title">${task.nombreTarea}</div>
+                        <div class="task-date">${formatDate(task.fechaEntrega)}</div>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-subject">${task.materia}</span>
+                    </div>
+                    <p>${task.descripcion}</p>
+                    <div class="task-actions">
+                        <button class="btn btn-success" onclick="markAsCompleted(${index})">Marcar como Completada</button>
+                        <button class="btn btn-danger" onclick="deletePendingTask(${index})">Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para cargar tareas completadas
+        async function loadCompletedTasks() {
+            try {
+                // DE: const response = await fetch(`${API_BASE}/TareasCompletas`);
+                // A:
+                const response = await fetch(`${COMPLETED_API_BASE}/TareasCompletas`);
+                if (!response.ok) {
+                    throw new Error('Error al cargar tareas completadas');
+                }
+                const tasks = await response.json();
+                renderCompletedTasks(tasks);
+                completedCounter.textContent = tasks.length;
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al cargar tareas completadas', 'error');
+                completedTasksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div>⚠️</div>
+                        <p>No se pudieron cargar las tareas completadas</p>
+                        <button class="btn btn-outline" onclick="loadCompletedTasks()">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+        // ==================================
+
+        // Función para renderizar tareas completadas (sin cambios)
+        function renderCompletedTasks(tasks) {
+            if (tasks.length === 0) {
+                completedTasksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div>✅</div>
+                        <p>No hay tareas completadas</p>
+                    </div>
+                `;
+                return;
+            }
+
+            completedTasksContainer.innerHTML = tasks.map((task, index) => `
+                <div class="task-item">
+                    <div class="task-header">
+                        <div class="task-title">${task.nombreTarea}</div>
+                        <div class="task-date">${formatDate(task.fechaEntrega)}</div>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-subject">${task.materia}</span>
+                    </div>
+                    <p>${task.descripcion}</p>
+                    <div class="task-actions">
+                        <button class="btn btn-outline" onclick="markAsPending(${index})">Mover a Pendientes</button>
+                        <button class="btn btn-danger" onclick="deleteCompletedTask(${index})">Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para marcar una tarea como completada
+        async function markAsCompleted(index) {
+            try {
+                // DE: const response = await fetch(`${API_BASE}/pasarTareaACompletadas?indice=${index}`);
+                // A:
+                const response = await fetch(`${PENDING_API_BASE}/pasarTareaACompletadas?indice=${index}`);
+                if (!response.ok) {
+                    throw new Error('Error al marcar tarea como completada');
+                }
+                const result = await response.text();
+                showNotification('Tarea marcada como completada');
+                loadPendingTasks();
+                loadCompletedTasks();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al marcar tarea como completada', 'error');
+            }
+        }
+        // ==================================
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para marcar una tarea como pendiente
+        async function markAsPending(index) {
+            try {
+                // DE: const response = await fetch(`${API_BASE}/pasarTareaAPendiente?indice=${index}`);
+                // A:
+                const response = await fetch(`${COMPLETED_API_BASE}/pasarTareaAPendiente?indice=${index}`);
+                if (!response.ok) {
+                    throw new Error('Error al mover tarea a pendientes');
+                }
+                const result = await response.text();
+                showNotification('Tarea movida a pendientes');
+                loadPendingTasks();
+                loadCompletedTasks();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al mover tarea a pendientes', 'error');
+            }
+        }
+        // ==================================
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para eliminar una tarea pendiente
+        async function deletePendingTask(index) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                return;
+            }
+            
+            try {
+                // DE: const response = await fetch(`${API_BASE}/eliminarTareaPendiente?i=${index}`);
+                // A:
+                const response = await fetch(`${PENDING_API_BASE}/eliminarTareaPendiente?i=${index}`);
+                if (!response.ok) {
+                    throw new Error('Error al eliminar tarea pendiente');
+                }
+                const result = await response.text();
+                showNotification('Tarea pendiente eliminada');
+                loadPendingTasks();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al eliminar tarea pendiente', 'error');
+            }
+        }
+        // ==================================
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para eliminar una tarea completada
+        async function deleteCompletedTask(index) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                return;
+            }
+            
+            try {
+                // DE: const response = await fetch(`${API_BASE}/eliminarTareaCompletada?i=${index}`);
+                // A:
+                const response = await fetch(`${COMPLETED_API_BASE}/eliminarTareaCompletada?i=${index}`);
+                if (!response.ok) {
+                    throw new Error('Error al eliminar tarea completada');
+                }
+                const result = await response.text();
+                showNotification('Tarea completada eliminada');
+                loadCompletedTasks();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al eliminar tarea completada', 'error');
+            }
+        }
+        // ==================================
+
+        // ========== CAMBIAR ESTO ==========
+        // Función para agregar una nueva tarea
+        async function addNewTask(taskData) {
+            try {
+                // DE: const response = await fetch(`${API_BASE}/agregarTareaPendiente`, {
+                // A:
+                const response = await fetch(`${PENDING_API_BASE}/agregarTareaPendiente`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(taskData),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al agregar tarea');
+                }
+                
+                const result = await response.text();
+                showNotification('Tarea agregada correctamente');
+                loadPendingTasks();
+                taskForm.reset();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error al agregar tarea', 'error');
+            }
+        }
+        // ==================================
+
+        // Manejar el envío del formulario (sin cambios)
+        taskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('task-title').value;
+            const subject = document.getElementById('task-subject').value;
+            const dueDate = document.getElementById('task-due-date').value;
+            const description = document.getElementById('task-description').value;
+            
+            const dateParts = dueDate.split('-');
+            const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+            
+            const taskData = {
+                nombreTarea: title,
+                fechaEntrega: formattedDate,
+                materia: subject,
+                descripcion: description
+            };
+            
+            addNewTask(taskData);
+        });
+
+        // Limpiar formulario (sin cambios)
+        document.getElementById('clear-form').addEventListener('click', function() {
+            taskForm.reset();
+        });
+
+        // Cargar tareas al iniciar (sin cambios)
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPendingTasks();
+            loadCompletedTasks();
+        });
+
+        // Recargar tareas cada 30 segundos (sin cambios)
+        setInterval(() => {
+            loadPendingTasks();
+            loadCompletedTasks();
+        }, 30000);
+    </script>
+</body>
+</html>
